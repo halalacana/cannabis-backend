@@ -1,23 +1,26 @@
-const express = require('express');
-const MenuItem = require('../models/menuItemModel');
+const express = require("express");
+const MenuItem = require("../models/menuItemModel");
 const router = express.Router();
 
-router.get('/', async (req, res) => {
+// Get all menu items
+router.get("/", async (req, res) => {
   try {
     const menu = await MenuItem.find();
     res.json(menu);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: "Server Error" });
   }
 });
 
-router.post('/', async (req, res) => {
+// Get a single menu item by ID
+router.get("/:id", async (req, res) => {
   try {
-    const newItem = new MenuItem(req.body);
-    await newItem.save();
-    res.status(201).json({ message: '✅ Menu item added!' });
+    const item = await MenuItem.findById(req.params.id);
+    if (!item) return res.status(404).json({ error: "Item not found" });
+
+    res.json(item);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: "Server Error" });
   }
 });
 
