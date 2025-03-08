@@ -1,35 +1,23 @@
-require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
-
-
-
+require("dotenv").config();
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+app.use(express.json()); // ✅ Ensure body parsing middleware is included
 
-app.get("/", (req, res) => {
-  res.send("🚀 Backend is running!");
-});
+// Connect to MongoDB
+mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+}).then(() => console.log("✅ MongoDB Connected"))
+  .catch(err => console.error("❌ MongoDB connection error:", err));
 
+// Import Routes
+app.use("/api/menu", require("./routes/menuRoutes"));
+app.use("/api/orders", require("./routes/orderRoutes")); // ✅ Ensure this line is here
 
-// Import routes
-const menuRoutes = require("./routes/menuRoutes");
-const orderRoutes = require("./routes/orderRoutes");
-
-// Use routes
-app.use("/api/menu", menuRoutes);
-app.use("/api/orders", orderRoutes);
-
-
-// Set PORT dynamically for Render
-const PORT = process.env.PORT || 5000;
-
-mongoose
-  .connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => {
-    app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
-  })
-  .catch((err) => console.error("❌ MongoDB connection error:", err));
+// Start Server
+const PORT = process.env.PORT || 5001;
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
