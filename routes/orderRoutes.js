@@ -2,7 +2,7 @@ const express = require("express");
 const Order = require("../models/orderModel");
 const router = express.Router();
 
-// 📌 Get All Orders (For Admin Dashboard)
+// 📌 Get all orders (Admin Panel)
 router.get("/", async (req, res) => {
   try {
     const orders = await Order.find().sort({ createdAt: -1 });
@@ -13,28 +13,27 @@ router.get("/", async (req, res) => {
   }
 });
 
-// 📌 Update Order Status (Admin Update)
-router.put("/:id", async (req, res) => {
+// 📌 Place a New Order (Customer)
+router.post("/", async (req, res) => {
   try {
-    const { status } = req.body;
-    if (!["Pending", "Processing", "Completed", "Cancelled"].includes(status)) {
-      return res.status(400).json({ success: false, message: "Invalid status" });
+    console.log("Received order request:", req.body);
+
+    const { name, phone, address, items, totalAmount } = req.body;
+
+    if (!name || !phone || !address || !items || items.length === 0) {
+      console.error("Validation failed: Missing required fields");
+      return res.status(400).json({ success: false, message: "All fields are required" });
     }
 
-    const updatedOrder = await Order.findByIdAndUpdate(
-      req.params.id,
-      { status },
-      { new: true }
-    );
+    const newOrder = new Order({ name, phone, address, items, totalAmount });
+    await newOrder.save();
 
-    if (!updatedOrder) {
-      return res.status(404).json({ success: false, message: "Order not found" });
-    }
+    console.log("Order successfully saved:", newOrder);
+    res.status(201).json({ success: true, message: "Order placed!", order: newOrder });
 
-    res.json({ success: true, message: "Order updated", order: updatedOrder });
   } catch (error) {
-    console.error("Error updating order:", error);
-    res.status(500).json({ success: false, message: "Server error" });
+    console.error("Error placing order:", error);
+    res.status(500).json({ success: false, message: "Server error", error: error.message });
   }
 });
 
